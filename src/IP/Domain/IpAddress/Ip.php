@@ -4,30 +4,23 @@ namespace Webites\SimpleCaptcha\Ip\Domain\IpAddress;
 
 class Ip
 {
-    private string $ip;
+    private string $ip = '';
 
     public function __construct()
     {
-        $this->updateIp();
+        if(empty($_SESSION['real_ip_address'])) {
+            $this->updateIp( true );
+        }
+
         $this->validate();
     }
 
-    public function updateIp()
+    public function updateIp( bool $force = false )
     {
-        if (!empty($_SERVER['HTTP_CLIENT_IP']))   //check ip from share internet
-        {
-            $ip=$_SERVER['HTTP_CLIENT_IP'];
+        if ($force) {
+            $this->ip = $this->getPublicIP();
+            $_SESSION['real_ip_address'] = $this->ip;
         }
-        elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR']))   //to check ip is pass from proxy
-        {
-            $ip=$_SERVER['HTTP_X_FORWARDED_FOR'];
-        }
-        else
-        {
-            $ip=$_SERVER['REMOTE_ADDR'];
-        }
-
-        $this->ip = $ip;
 
         return $this;
     }
@@ -38,5 +31,26 @@ class Ip
             throw new \InvalidArgumentException('Invalid IP address');
         }
         return $this;
+    }
+
+    public function getIp() : string
+    {
+        return $this->ip;
+    }
+
+    public function getPublicIP() {
+        $output = file_get_contents("https://httpbin.org/ip");
+
+        $ip = json_decode($output, true);
+
+        return $ip['origin'];
+    }
+
+    public function getInfoAboutIp(
+        string $ip
+    ): array {
+        $about = file_get_contents('https://ipwho.is/'.$ip);
+
+        return json_decode($about, true);
     }
 }

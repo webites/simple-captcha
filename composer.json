@@ -14,5 +14,7 @@
             "email": "lgolabek@outlook.com"
         }
     ],
-    "require": {}
+    "require": {
+        "ext-curl": "*"
+    }
 }
